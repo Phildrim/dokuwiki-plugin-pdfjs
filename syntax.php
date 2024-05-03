@@ -54,28 +54,35 @@ class syntax_plugin_pdfjs extends DokuWiki_Syntax_Plugin {
                        'title'   => '',
                        'width'   => '100%',
                        'height'  => '600px',
-                       'zoom'    => '',
+                       'zoom'    => 'auto',
                        'display' => 'embed',
         );
 
         list($params, $media) = explode('>', trim($match, '{}'), 2);
 
-        // handle media parameters (linkId and title)
-        list($link, $title) = explode('|', $media, 2);
+        // Handle media parameters (linkId and title)
+		$media_parts = explode('|', $media, 2);
+			$link = $media_parts[0];
+			$title = $media_parts[1] ?? 'Default Title';  // Default-Value if title is empty
 
-        list($idzoom, $display) = explode('?disp=', $link, 2);
-        $display = trim($display);
-        //get the display
-        if($display) {
-            if(in_array($display, $this->display_opts)) {
-                $opts['display'] = $display;
-            } else {
-                msg('pdfjs: unknown display: ' . $display, -1);
-            }
-        }
+		$link_parts = explode('?disp=', $link, 2);
+			$idzoom = $link_parts[0];
+			$display = trim($link_parts[1] ?? '');  //  Default-Value if display is empty
 
-        //get the zoom
-        list($id, $zoom) = explode('?', $idzoom, 2);
+		// Get the display
+		if ($display) {
+			if (in_array($display, $this->display_opts)) {
+			$opts['display'] = $display;
+			} else {
+				msg('pdfjs: unknown display: ' . $display, -1);
+			}
+		}
+
+		// Get the zoom
+		$idzoom_parts = explode('?', $idzoom, 2);
+			$id = $idzoom_parts[0];
+			$zoom = $idzoom_parts[1] ?? '';  // Default-Value if zoom is empty
+
         if($zoom) {
             if(in_array($zoom, $this->zoom_opts)) {
                 $opts['zoom'] = $zoom;
@@ -88,7 +95,7 @@ class syntax_plugin_pdfjs extends DokuWiki_Syntax_Plugin {
         $params = trim(substr($params, strlen('pdfjs')));
         $size   = explode(',', $params, 2);
         //only height
-        if(count($size) == 1) {
+        if(count($size) == 1 && $size[0] != "") {
             $opts['height'] = preg_replace('/\s/', '', $size[0]);
 
             //width, height
@@ -121,7 +128,7 @@ class syntax_plugin_pdfjs extends DokuWiki_Syntax_Plugin {
     }
 
     /**
-     * Generate html for sytax {{pdfjs>}}
+     * Generate html for syntax {{pdfjs>}}
      *
      */
     private function _html_embed_pdfjs($opts) {
